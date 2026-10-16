@@ -48,3 +48,9 @@ buildNumber.properties
 # Avoid ignoring Maven Wrapper jar file (.mvn/wrapper/maven-wrapper.jar)
 !/.mvn/wrapper/maven-wrapper.jar
 
+# IntelliJ IDEA #
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
