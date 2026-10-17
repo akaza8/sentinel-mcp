@@ -54,3 +54,9 @@ buildNumber.properties
 *.iml
 *.ipr
 out/
+.aider*
+
+# Other
+CONVENTIONS.md
+
+
