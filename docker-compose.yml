@@ -1,0 +1,46 @@
+services:
+  sentinel-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_DB: sentinel_rag
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sentinel_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  sentinel-ollama:
+    image: ollama/ollama:latest
+    container_name: sentinel-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    restart: unless-stopped
+
+  # Helper service: pulls nomic-embed-text once Ollama is healthy
+  ollama-model-puller:
+    image: curlimages/curl:latest
+    container_name: ollama-model-puller
+    depends_on:
+      - sentinel-ollama
+    restart: "no"
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama service to start...';
+        while ! nc -z sentinel-ollama 11434; do sleep 2; done;
+        echo 'Ollama is online. Pulling nomic-embed-text...';
+        curl -X POST http://sentinel-ollama:11434/api/pull -d '{\"name\": \"nomic-embed-text\"}';
+        echo 'Model pulled successfully.';
+      "
+
+volumes:
+  pgdata:
+  ollamadata:
