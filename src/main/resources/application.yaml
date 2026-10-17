@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: sentinel-mcp
+  threads:
+    virtual:
+      enabled: true
+
+  # PostgreSQL + pgvector connection
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sentinel_rag
+    username: postgres
+    password: secret
+    driver-class-name: org.postgresql.Driver
+
+  # Spring AI configuration
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      embedding:
+        options:
+          model: nomic-embed-text
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 768
+    mcp:
+      server:
+        name: sentinel-incident-triage
+        version: 1.0.0
+        type: SYNC
+        protocol: STREAMABLE
+
+# Custom project settings
+sentinel:
+  log-provider: mock # Options: mock | loki | elasticsearch
+  rag:
+    similarity-threshold: 0.72
+    top-k: 4
