@@ -74,7 +74,6 @@ class TraceAnalyzerServiceTest {
         
         assertThat(signature).isEqualTo("java.sql.SQLTransientConnectionException:connection pool exhausted: hikaripool-n - thread starvation");
         assertThat(signature).doesNotContain("1");
-        assertThat(signature).isLowerCase();
     }
 
     @Test
