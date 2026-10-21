@@ -27,7 +27,7 @@ public class RunbookRagService {
                 filterExpression = "service == '" + targetService + "'";
             }
 
-            SearchRequest.SearchRequestBuilder builder = SearchRequest.builder()
+            var builder = SearchRequest.builder()
                     .query(query != null ? query : "incident triage")
                     .topK(TOP_K)
                     .similarityThreshold(SIMILARITY_THRESHOLD);
