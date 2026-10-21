@@ -1,7 +1,7 @@
-package com.akash.sentinel_mcp.service;
+package com.akash.sentinel.service;
 
-import com.akash.sentinel_mcp.mcp.dto.LogSpanDto;
-import com.akash.sentinel_mcp.mcp.dto.ErrorSpikeDto;
+import com.akash.sentinel.mcp.dto.LogSpanDto;
+import com.akash.sentinel.mcp.dto.ErrorSpikeDto;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

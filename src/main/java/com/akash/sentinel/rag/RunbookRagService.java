@@ -1,6 +1,6 @@
 package com.akash.sentinel.rag;
 
-import com.akash.sentinel_mcp.mcp.dto.RunbookMatchDto;
+import com.akash.sentinel.mcp.dto.RunbookMatchDto;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;

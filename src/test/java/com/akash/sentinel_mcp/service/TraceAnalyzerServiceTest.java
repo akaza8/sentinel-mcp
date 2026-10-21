@@ -1,7 +1,8 @@
 package com.akash.sentinel_mcp.service;
 
-import com.akash.sentinel_mcp.mcp.dto.LogSpanDto;
-import com.akash.sentinel_mcp.mcp.dto.ErrorSpikeDto;
+import com.akash.sentinel.mcp.dto.LogSpanDto;
+import com.akash.sentinel.mcp.dto.ErrorSpikeDto;
+import com.akash.sentinel.service.TraceAnalyzerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

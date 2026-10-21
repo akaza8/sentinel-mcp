@@ -32,6 +32,7 @@ public class RunbookIngestionRunner {
     public void ingest() {
         try {
             Path dir = Path.of("runbooks");
+//            log.info("Ingesting runbooks from directory: {}", dir.toAbsolutePath());
             if (!Files.exists(dir) || !Files.isDirectory(dir)) {
                 log.warn("Runbooks directory not found: {}", dir.toAbsolutePath());
                 return;

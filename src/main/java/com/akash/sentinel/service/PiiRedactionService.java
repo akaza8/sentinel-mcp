@@ -1,4 +1,4 @@
-package com.akash.sentinel_mcp.service;
+package com.akash.sentinel.service;
 
 import org.springframework.stereotype.Service;
 

@@ -1,9 +1,10 @@
 package com.akash.sentinel_mcp;
 
+import com.akash.sentinel.SentinelMcpApplication;
 import com.akash.sentinel.rag.MarkdownRunbookSplitter;
 import com.akash.sentinel.rag.RunbookIngestionRunner;
 import com.akash.sentinel.rag.RunbookRagService;
-import com.akash.sentinel_mcp.mcp.dto.RunbookMatchDto;
+import com.akash.sentinel.mcp.dto.RunbookMatchDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

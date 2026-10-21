@@ -1,4 +1,4 @@
-package com.akash.sentinel_mcp;
+package com.akash.sentinel;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

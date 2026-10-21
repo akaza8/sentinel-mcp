@@ -1,6 +1,6 @@
-package com.akash.sentinel_mcp.provider;
+package com.akash.sentinel.provider;
 
-import com.akash.sentinel_mcp.mcp.dto.LogSpanDto;
+import com.akash.sentinel.mcp.dto.LogSpanDto;
 
 import java.util.List;
 

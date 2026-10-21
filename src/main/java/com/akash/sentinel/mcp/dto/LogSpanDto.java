@@ -1,4 +1,4 @@
-package com.akash.sentinel_mcp.mcp.dto;
+package com.akash.sentinel.mcp.dto;
 
 import java.time.Instant;
 
