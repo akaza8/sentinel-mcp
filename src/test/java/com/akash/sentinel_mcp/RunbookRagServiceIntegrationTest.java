@@ -1,8 +1,10 @@
 package com.akash.sentinel_mcp;
 
 import com.akash.sentinel.rag.MarkdownRunbookSplitter;
+import com.akash.sentinel.rag.RunbookIngestionRunner;
 import com.akash.sentinel.rag.RunbookRagService;
 import com.akash.sentinel_mcp.mcp.dto.RunbookMatchDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@ContextConfiguration(classes = {SentinelMcpApplication.class, TestcontainersConfiguration.class, MarkdownRunbookSplitter.class, RunbookRagService.class})
+@ContextConfiguration(classes = {SentinelMcpApplication.class, TestcontainersConfiguration.class, MarkdownRunbookSplitter.class, RunbookRagService.class, RunbookIngestionRunner.class})
 class RunbookRagServiceIntegrationTest {
 
     @Autowired
@@ -22,6 +24,14 @@ class RunbookRagServiceIntegrationTest {
 
     @Autowired
     private RunbookRagService ragService;
+
+    @Autowired
+    private RunbookIngestionRunner ingestionRunner;
+
+    @BeforeEach
+    void ingestRunbooks() {
+        ingestionRunner.ingest();
+    }
 
     @Test
     void splitterExtractsFrontmatterAndSplitsOnH2WithoutLosingHeaders() throws Exception {
