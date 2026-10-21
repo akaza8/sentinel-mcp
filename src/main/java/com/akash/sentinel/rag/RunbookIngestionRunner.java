@@ -30,35 +30,39 @@ public class RunbookIngestionRunner {
 
     @EventListener(ApplicationReadyEvent.class)
     public void ingest() {
-        Path dir = Path.of("runbooks");
-        if (!Files.exists(dir) || !Files.isDirectory(dir)) {
-            log.warn("Runbooks directory not found: {}", dir.toAbsolutePath());
-            return;
-        }
-
-        List<Document> allChunks = new ArrayList<>();
-        try (Stream<Path> stream = Files.list(dir)) {
-            stream.filter(p -> p.toString().endsWith(".md"))
-                  .forEach(p -> {
-                      try {
-                          allChunks.addAll(splitter.split(p));
-                      } catch (IOException e) {
-                          log.error("Failed to split runbook: {}", p, e);
-                      }
-                  });
-        } catch (IOException e) {
-            log.error("Failed to list runbooks directory: {}", dir, e);
-        }
-
-        if (!allChunks.isEmpty()) {
-            try {
-                vectorStore.add(allChunks);
-                log.info("Indexed {} chunks into VectorStore", allChunks.size());
-            } catch (Exception e) {
-                log.error("Failed to persist chunks to VectorStore", e);
+        try {
+            Path dir = Path.of("runbooks");
+            if (!Files.exists(dir) || !Files.isDirectory(dir)) {
+                log.warn("Runbooks directory not found: {}", dir.toAbsolutePath());
+                return;
             }
-        } else {
-            log.info("No runbook chunks to index");
+
+            List<Document> allChunks = new ArrayList<>();
+            try (Stream<Path> stream = Files.list(dir)) {
+                stream.filter(p -> p.toString().endsWith(".md"))
+                      .forEach(p -> {
+                          try {
+                              allChunks.addAll(splitter.split(p));
+                          } catch (IOException e) {
+                              log.error("Failed to split runbook: {}", p, e);
+                          }
+                      });
+            } catch (IOException e) {
+                log.error("Failed to list runbooks directory: {}", dir, e);
+            }
+
+            if (!allChunks.isEmpty()) {
+                try {
+                    vectorStore.add(allChunks);
+                    log.info("Indexed {} chunks into VectorStore", allChunks.size());
+                } catch (Exception e) {
+                    log.error("Failed to persist chunks to VectorStore (embedding model may be missing)", e);
+                }
+            } else {
+                log.info("No runbook chunks to index");
+            }
+        } catch (Exception e) {
+            log.error("Runbook ingestion failed unexpectedly", e);
         }
     }
 }
