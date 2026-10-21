@@ -27,13 +27,16 @@ public class RunbookRagService {
                 filterExpression = "service == '" + targetService + "'";
             }
 
-            SearchRequest request = SearchRequest.query(query != null ? query : "incident triage")
-                    .withTopK(TOP_K)
-                    .withSimilarityThreshold(SIMILARITY_THRESHOLD);
+            SearchRequest.SearchRequestBuilder builder = SearchRequest.builder()
+                    .query(query != null ? query : "incident triage")
+                    .topK(TOP_K)
+                    .similarityThreshold(SIMILARITY_THRESHOLD);
 
             if (filterExpression != null) {
-                request = request.withFilterExpression(filterExpression);
+                builder.filterExpression(filterExpression);
             }
+
+            SearchRequest request = builder.build();
 
             List<Document> candidates = vectorStore.similaritySearch(request);
 
@@ -60,7 +63,6 @@ public class RunbookRagService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            // Clean error handling: return empty list rather than propagating
             return List.of();
         }
     }

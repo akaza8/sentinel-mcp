@@ -1,5 +1,7 @@
 package com.akash.sentinel.rag;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -16,6 +18,8 @@ import java.util.stream.Stream;
 @Component
 public class RunbookIngestionRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(RunbookIngestionRunner.class);
+
     private final MarkdownRunbookSplitter splitter;
     private final VectorStore vectorStore;
 
@@ -28,6 +32,7 @@ public class RunbookIngestionRunner {
     public void ingest() {
         Path dir = Path.of("runbooks");
         if (!Files.exists(dir) || !Files.isDirectory(dir)) {
+            log.warn("Runbooks directory not found: {}", dir.toAbsolutePath());
             return;
         }
 
@@ -38,19 +43,22 @@ public class RunbookIngestionRunner {
                       try {
                           allChunks.addAll(splitter.split(p));
                       } catch (IOException e) {
-                          // Log and continue; do not block other runbooks
+                          log.error("Failed to split runbook: {}", p, e);
                       }
                   });
         } catch (IOException e) {
-            // Log directory read failure
+            log.error("Failed to list runbooks directory: {}", dir, e);
         }
 
         if (!allChunks.isEmpty()) {
             try {
                 vectorStore.add(allChunks);
+                log.info("Indexed {} chunks into VectorStore", allChunks.size());
             } catch (Exception e) {
-                // Log vector store persistence error
+                log.error("Failed to persist chunks to VectorStore", e);
             }
+        } else {
+            log.info("No runbook chunks to index");
         }
     }
 }

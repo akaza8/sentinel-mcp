@@ -5,5 +5,5 @@ public record RunbookMatchDto(
     String title,
     double vectorScore,
     double exactScore,
-    double hybridScore
+    double finalScore
 ) {}
