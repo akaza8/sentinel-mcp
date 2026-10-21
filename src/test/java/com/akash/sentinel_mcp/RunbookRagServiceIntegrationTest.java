@@ -14,7 +14,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@ContextConfiguration(classes = {SentinelMcpApplication.class, TestcontainersConfiguration.class})
+@ContextConfiguration(classes = {SentinelMcpApplication.class, TestcontainersConfiguration.class, MarkdownRunbookSplitter.class})
 class RunbookRagServiceIntegrationTest {
 
     @Autowired
