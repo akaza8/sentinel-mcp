@@ -9,14 +9,14 @@ spring:
       enabled: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/sentinel_rag
+    url: jdbc:postgresql://sentinel-postgres:5432/sentinel_rag
     username: postgres
     password: secret
     driver-class-name: org.postgresql.Driver
 
   ai:
     ollama:
-      base-url: http://localhost:11434
+      base-url: http://sentinel-ollama:11434
       embedding:
         options:
           model: nomic-embed-text
@@ -36,7 +36,7 @@ spring:
 sentinel:
   log-provider: mock
   loki:
-    url: http://localhost:3100
+    url: http://sentinel-ollama:3100
   elasticsearch:
     url: http://localhost:9200
   rag:
