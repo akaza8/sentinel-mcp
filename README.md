@@ -107,4 +107,4 @@ severity: high
 
 ## License
 
-[Specify your license here]
+Nooooooooo
