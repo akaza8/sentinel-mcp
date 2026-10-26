@@ -16,7 +16,7 @@ public class RunbookRagService {
 
     private static final Logger log = LoggerFactory.getLogger(RunbookRagService.class);
     private final VectorStore vectorStore;
-    private static final double SIMILARITY_THRESHOLD = 0.55;
+    private static final double SIMILARITY_THRESHOLD = 0.45;
     private static final int TOP_K = 4;
 
     public RunbookRagService(VectorStore vectorStore) {

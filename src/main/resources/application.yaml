@@ -40,5 +40,5 @@ sentinel:
   elasticsearch:
     url: http://localhost:9200
   rag:
-    similarity-threshold: 0.55
+    similarity-threshold: 0.45
     top-k: 4
