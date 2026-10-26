@@ -52,6 +52,69 @@ Sentinel MCP provides AI-powered incident analysis by:
    ./mvnw spring-boot:run
    ```
 
+## 1-Minute Plug & Play
+
+### Zero-Setup Docker Startup
+```bash
+docker compose up -d
+```
+This starts `sentinel-postgres`, `sentinel-ollama`, pulls the embedding model, builds `sentinel-mcp`, and exposes it on `http://localhost:8080`.
+
+### MCP Client Config (STDIO Transport)
+
+Copy-paste into your client config. The container runs in pure JSON-RPC STDIO mode (`spring.ai.mcp.server.stdio: true`) with logs redirected to `/logs/sentinel-stdio.log` so stdout stays clean.
+
+**Claude Desktop** (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "sentinel": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "--network", "host",
+        "-e", "SPRING_PROFILES_ACTIVE=stdio",
+        "sentinel-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+**Cursor** (`.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "sentinel": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "--network", "host",
+        "-e", "SPRING_PROFILES_ACTIVE=stdio",
+        "sentinel-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+**IntelliJ Continue.dev** (`~/.continue/config.json`):
+```json
+{
+  "mcpServers": {
+    "sentinel": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "--network", "host",
+        "-e", "SPRING_PROFILES_ACTIVE=stdio",
+        "sentinel-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
 ## Configuration
 
 ```yaml
@@ -107,4 +170,4 @@ severity: high
 
 ## License
 
-Nooooooooo
+MIT
