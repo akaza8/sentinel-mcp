@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty(name = "sentinel.log-provider", havingValue = "mock")
+@ConditionalOnProperty(name = "sentinel.log-provider", havingValue = "mock", matchIfMissing = true)
 public class MockChaosLogProvider implements LogProvider {
 
     @Override
