@@ -19,8 +19,20 @@ public class TraceAnalyzerService {
     }
 
     public String normalizeErrorSignature(LogSpanDto span) {
-        if (span == null || span.exceptionClass() == null) return "unknown";
-        String normalizedMessage = span.message().replaceAll("\\d+", "n").toLowerCase();
+        if (span == null || span.exceptionClass() == null) {
+            return "unknown";
+        }
+
+        String message = span.message();
+
+        if (message == null || message.isBlank()) {
+            return span.exceptionClass();
+        }
+
+        String normalizedMessage = message
+                .replaceAll("\\d+", "n")
+                .toLowerCase();
+
         return span.exceptionClass() + ":" + normalizedMessage;
     }
 

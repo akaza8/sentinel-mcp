@@ -35,9 +35,9 @@ public class TriageOrchestratorService {
                 s.parentSpanId(),
                 s.serviceName(),
                 s.timestamp(),
-                s.message() != null ? piiRedactionService.redact(s.message()) : null,
-                s.exceptionClass(),
-                s.level()
+                s.level(),
+                    piiRedactionService.redact(s.message()),
+                s.exceptionClass()
             ))
             .toList();
 

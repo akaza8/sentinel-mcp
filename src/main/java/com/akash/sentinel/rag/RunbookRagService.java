@@ -1,6 +1,8 @@
 package com.akash.sentinel.rag;
 
 import com.akash.sentinel.mcp.dto.RunbookMatchDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 @Service
 public class RunbookRagService {
 
+    private static final Logger log = LoggerFactory.getLogger(RunbookRagService.class);
     private final VectorStore vectorStore;
     private static final double SIMILARITY_THRESHOLD = 0.72;
     private static final int TOP_K = 4;
@@ -26,9 +29,11 @@ public class RunbookRagService {
             if (targetService != null && !targetService.isBlank()) {
                 filterExpression = "service == '" + targetService + "'";
             }
-
+            String searchQuery = (query != null && !query.isBlank())
+                    ? query
+                    : "incident triage";
             var builder = SearchRequest.builder()
-                    .query(query != null ? query : "incident triage")
+                    .query(searchQuery)
                     .topK(TOP_K)
                     .similarityThreshold(SIMILARITY_THRESHOLD);
 
@@ -39,6 +44,23 @@ public class RunbookRagService {
             SearchRequest request = builder.build();
 
             List<Document> candidates = vectorStore.similaritySearch(request);
+            if (candidates.isEmpty()
+                    && targetService != null
+                    && !targetService.isBlank()) {
+
+                log.info(
+                        "No runbooks found for service '{}'. Retrying without service filter.",
+                        targetService
+                );
+
+                SearchRequest fallbackRequest = SearchRequest.builder()
+                        .query(searchQuery)
+                        .topK(TOP_K)
+                        .similarityThreshold(SIMILARITY_THRESHOLD)
+                        .build();
+
+                candidates = vectorStore.similaritySearch(fallbackRequest);
+            }
 
             List<ScoredResult> scored = candidates.stream()
                     .map(doc -> {
@@ -46,7 +68,15 @@ public class RunbookRagService {
                         String docException = doc.getMetadata() != null ? (String) doc.getMetadata().get("primary_exception") : null;
                         double exactScore = (exceptionClass != null && exceptionClass.equals(docException)) ? 1.0 : 0.0;
                         double finalScore = (vectorScore * 0.70) + (exactScore * 0.30);
+//                        System.out.printf(
+//                                "runbook=%s, docException=%s, vectorScore=%f, queryException=%s%n",
+//                                doc.getMetadata().get("runbook_id"),
+//                                docException,
+//                                vectorScore,
+//                                exceptionClass
+//                        );
                         return new ScoredResult(doc, vectorScore, exactScore, finalScore);
+
                     })
                     .sorted(Comparator.comparingDouble(ScoredResult::finalScore).reversed())
                     .limit(2)
@@ -63,18 +93,39 @@ public class RunbookRagService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            return List.of();
+            log.error("Runbook retrieval failed", e);
+            throw new IllegalStateException("Runbook retrieval failed", e);
         }
     }
 
+//    private double extractVectorScore(Document doc) {
+//        if (doc.getMetadata() != null && doc.getMetadata().containsKey("similarity_score")) {
+//            Object val = doc.getMetadata().get("similarity_score");
+//            if (val instanceof Number) {
+//                return ((Number) val).doubleValue();
+//            }
+//        }
+//        log.error("hereeeeeeeeeeeeeee");
+//        System.out.println("Document metadata: " + doc.getMetadata());
+//        return 0.5;
+//    }
     private double extractVectorScore(Document doc) {
-        if (doc.getMetadata() != null && doc.getMetadata().containsKey("similarity_score")) {
-            Object val = doc.getMetadata().get("similarity_score");
-            if (val instanceof Number) {
-                return ((Number) val).doubleValue();
-            }
+        if (doc.getMetadata() == null) {
+            throw new IllegalStateException(
+                    "Missing metadata in vector search result"
+            );
         }
-        return 0.5;
+
+        Object distanceValue = doc.getMetadata().get("distance");
+
+        if (distanceValue instanceof Number distance) {
+            return Math.max(0.0, Math.min(1.0, 1.0 - distance.doubleValue()));
+        }
+
+        throw new IllegalStateException(
+                "Vector search result has no numeric distance: "
+                        + doc.getMetadata()
+        );
     }
 
     private record ScoredResult(Document doc, double vectorScore, double exactScore, double finalScore) {}

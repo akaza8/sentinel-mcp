@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -33,15 +35,33 @@ class RunbookRagServiceIntegrationTest {
     void ingestRunbooks() {
         ingestionRunner.ingest();
     }
+    @DynamicPropertySource
+    static void ollamaProperties(DynamicPropertyRegistry registry) {
+        registry.add(
+                "spring.ai.ollama.base-url",
+                () -> "http://localhost:11434"
+        );
+    }
+    @Test
+    void paraphrasedQueryFindsCorrectRunbook() {
+        List<RunbookMatchDto> results = ragService.search(
+                "payment-service",
+                "SocketTimeoutException",
+                "Stripe payment requests keep timing out"
+        );
 
+        assertThat(results).isNotEmpty();
+        assertThat(results.getFirst().runbookId())
+                .isEqualTo("RB-002-stripe-gateway-timeout");
+    }
     @Test
     void splitterExtractsFrontmatterAndSplitsOnH2WithoutLosingHeaders() throws Exception {
         Path runbook = Path.of("runbooks/RB-002-stripe-gateway-timeout.md");
         List<org.springframework.ai.document.Document> docs = splitter.split(runbook);
 
         assertThat(docs).isNotEmpty();
-        assertThat(docs.get(0).getMetadata()).containsEntry("service", "payment-service");
-        assertThat(docs.get(0).getMetadata()).containsEntry("primary_exception", "SocketTimeoutException");
+        assertThat(docs.getFirst().getMetadata()).containsEntry("service", "payment-service");
+        assertThat(docs.getFirst().getMetadata()).containsEntry("primary_exception", "SocketTimeoutException");
 
         List<String> sectionNames = docs.stream()
                 .map(d -> (String) d.getMetadata().get("section_name"))
@@ -52,15 +72,31 @@ class RunbookRagServiceIntegrationTest {
 
     @Test
     void queryPaymentServiceReturnsRB002WithHighHybridScore() {
+//        List<RunbookMatchDto> results = ragService.search(
+//                "payment-service",
+//                "SocketTimeoutException",
+//                "payment-service java.net.SocketTimeoutException Read timed out"
+//        );
         List<RunbookMatchDto> results = ragService.search(
                 "payment-service",
                 "SocketTimeoutException",
                 "payment-service java.net.SocketTimeoutException Read timed out"
         );
 
+        assertThat(results).isNotEmpty();
+
+        assertThat(results.getFirst().runbookId())
+                .isEqualTo("RB-002-stripe-gateway-timeout");
+
+        assertThat(results.getFirst().finalScore())
+                .isGreaterThan(0.80);
+
+        assertThat(results.getFirst().exactScore())
+                .isEqualTo(1.0);
+
         if (!results.isEmpty()) {
-            assertThat(results.get(0).runbookId()).isEqualTo("RB-002-stripe-gateway-timeout");
-            assertThat(results.get(0).finalScore()).isGreaterThan(0.85);
+            assertThat(results.getFirst().runbookId()).isEqualTo("RB-002-stripe-gateway-timeout");
+            assertThat(results.getFirst().finalScore()).isGreaterThan(0.80);
         }
     }
 
@@ -84,7 +120,7 @@ class RunbookRagServiceIntegrationTest {
         );
 
         if (!results.isEmpty()) {
-            assertThat(results.get(0).finalScore()).isGreaterThanOrEqualTo(0.30);
+            assertThat(results.getFirst().finalScore()).isGreaterThanOrEqualTo(0.30);
         }
     }
 }

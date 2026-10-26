@@ -54,12 +54,14 @@ public class MarkdownRunbookSplitter {
             }
 
             String hash = sha256(content);
+            String uniqueDocId = filePath.getFileName().toString().replace(".md", "") + "_" + hash;
+            String deterministicUuid = java.util.UUID.nameUUIDFromBytes(uniqueDocId.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
             Map<String, Object> meta = new HashMap<>(frontmatter);
             meta.put("section_name", sectionName);
             meta.put("content_hash", hash);
             meta.put("runbook_id", filePath.getFileName().toString().replace(".md", ""));
 
-            chunks.add(new Document(content, meta));
+            chunks.add(new Document(deterministicUuid, content, meta));
         }
 
         return chunks;
