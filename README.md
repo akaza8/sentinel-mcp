@@ -280,4 +280,3 @@ sentinel-mcp/
 
 ## License
 
-MIT
