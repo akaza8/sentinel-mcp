@@ -1,11 +1,11 @@
 ---
 service: "payment-service"
-primary_exception: "ApiConnectionException"
+primary_exception: "SocketTimeoutException"
 title: "Stripe Payment Gateway Timeouts"
 ---
 
 ## Symptoms & Error Signatures
-`ApiConnectionException` from payment-service.
+`SocketTimeoutException` from payment-service.
 
 ## Root Cause Analysis
 Network latency and gateway timeout.
