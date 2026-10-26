@@ -36,9 +36,9 @@ spring:
 sentinel:
   log-provider: mock
   loki:
-    url: http://sentinel-ollama:3100
+    url: http://localhost:3100
   elasticsearch:
     url: http://localhost:9200
   rag:
-    similarity-threshold: 0.0
+    similarity-threshold: 0.55
     top-k: 4
