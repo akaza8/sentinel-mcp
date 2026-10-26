@@ -1,0 +1,14 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        stdio: true
+
+logging:
+  pattern:
+    console: ""
+  file:
+    name: /logs/sentinel-stdio.log
