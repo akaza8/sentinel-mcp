@@ -1,70 +1,79 @@
 # Sentinel MCP
 
-A Model Context Protocol (MCP) server for intelligent incident triage and runbook retrieval using RAG (Retrieval-Augmented Generation).
+> AI-powered incident triage and runbook retrieval via Model Context Protocol (MCP).
 
-## Overview
+Sentinel MCP is a production-grade Spring Boot server that combines semantic RAG (Retrieval-Augmented Generation) with hybrid vector search to help operators triage incidents faster. It ingests operational runbooks, analyzes error spans, and retrieves context-aware remediation steps through an MCP-compatible interface.
 
-Sentinel MCP provides AI-powered incident analysis by:
-- Ingesting and indexing operational runbooks with semantic chunking
-- Analyzing error spikes and log spans for incident triage
-- Retrieving relevant runbooks based on incident context
-- Redacting PII (Personally Identifiable Information) from logs
-- Providing hybrid RAG with metadata filtering and reranking
+---
 
-## Milestones
+## Features
 
-- Milestone 1 [COMPLETED] (v0.1.0): Foundation, Guardrails & Mock Strategy
-- Milestone 2 [COMPLETED] (v0.2.0): Semantic Markdown Chunker & Hybrid RAG
-  - `MarkdownRunbookSplitter` — H2 semantic chunking with metadata inheritance
-  - `RunbookIngestionRunner` — idempotent startup vector indexing
-  - `RunbookRagService` — metadata filter + 0.55 threshold + 70/30 hybrid reranker
-  - 3 Markdown runbooks with YAML frontmatter in `/runbooks`
+- **Semantic Runbook Chunking** — H2-level markdown splitting with YAML frontmatter inheritance
+- **Hybrid RAG Search** — Metadata-filtered vector search with 70/30 reranking and similarity thresholds
+- **Multi-Transport MCP** — HTTP (default) and pure STDIO (`spring.ai.mcp.server.stdio`) for Claude Desktop, Cursor, and IntelliJ Continue
+- **Log Provider Abstraction** — Pluggable `LogProvider` implementations: Mock (default), Loki, Elasticsearch
+- **PII Redaction** — Built-in `PiiRedactionService` for safe log handling
+- **Zero-Setup Packaging** — Multi-stage Docker build with bundled `/runbooks`; `docker compose up -d` requires no Java 21 installation
 
-## Tech Stack
+---
 
-- **Java 21**
-- **Spring Boot 4.1.1**
-- **Spring AI 2.0.1** — MCP server, Ollama integration, pgvector store
-- **PostgreSQL 16** with pgvector extension for vector embeddings
-- **Ollama** — Local LLM and embedding model (nomic-embed-text)
-- **Testcontainers** — Integration testing with PostgreSQL and Ollama
+## Architecture
+
+```
+Client (Claude / Cursor / Continue)
+  │
+  ▼
+MCP Transport (HTTP or STDIO)
+  │
+  ▼
+Sentinel MCP Server (Spring Boot 4.1.1 / Java 21)
+  ├── RunbookIngestionRunner  →  /runbooks  →  pgvector (HNSW)
+  ├── RunbookRagService       →  Hybrid search + rerank
+  ├── LogProvider             →  Mock / Loki / Elasticsearch
+  ├── PiiRedactionService     →  Log sanitization
+  └── TraceAnalyzerService    →  Error signature normalization
+```
+
+---
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- Java 21
-- Maven 3.9+
+- Docker & Docker Compose
+- (Optional) Java 21 + Maven 3.9+ for local development
+
+---
 
 ## Quick Start
 
-1. **Start infrastructure services:**
-   ```bash
-   docker-compose up -d
-   ```
+```bash
+# 1. Start infrastructure + build + expose on :8080
+docker compose up -d
 
-2. **Build the application:**
-   ```bash
-   ./mvnw clean package
-   ```
+# 2. Verify
+curl http://localhost:8080/actuator/health
+```
 
-3. **Run the application:**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+The `sentinel-mcp` service depends on `sentinel-postgres` and `ollama-model-puller`. The embedding model (`nomic-embed-text`) is pulled automatically.
+
+---
 
 ## 1-Minute Plug & Play
 
 ### Zero-Setup Docker Startup
+
 ```bash
 docker compose up -d
 ```
-This starts `sentinel-postgres`, `sentinel-ollama`, pulls the embedding model, builds `sentinel-mcp`, and exposes it on `http://localhost:8080`.
+
+- `sentinel-postgres` (pgvector) on `5432`
+- `sentinel-ollama` on `11434`
+- `sentinel-mcp` on `8080`
 
 ### MCP Client Config (STDIO Transport)
 
-Copy-paste into your client config. The container runs in pure JSON-RPC STDIO mode (`spring.ai.mcp.server.stdio: true`) with logs redirected to `/logs/sentinel-stdio.log` so stdout stays clean.
+The container can run in pure JSON-RPC STDIO mode (`application-stdio.yaml`). Logs are redirected to `/logs/sentinel-stdio.log` so stdout remains 100% clean for clients.
 
-**Claude Desktop** (`claude_desktop_config.json`):
+**Claude Desktop** (`claude_desktop_config.json`)
 ```json
 {
   "mcpServers": {
@@ -81,7 +90,7 @@ Copy-paste into your client config. The container runs in pure JSON-RPC STDIO mo
 }
 ```
 
-**Cursor** (`.cursor/mcp.json`):
+**Cursor** (`.cursor/mcp.json`)
 ```json
 {
   "mcpServers": {
@@ -98,7 +107,7 @@ Copy-paste into your client config. The container runs in pure JSON-RPC STDIO mo
 }
 ```
 
-**IntelliJ Continue.dev** (`~/.continue/config.json`):
+**IntelliJ Continue.dev** (`~/.continue/config.json`)
 ```json
 {
   "mcpServers": {
@@ -114,23 +123,121 @@ Copy-paste into your client config. The container runs in pure JSON-RPC STDIO mo
   }
 }
 ```
+
+---
 
 ## Configuration
 
+`application.yaml` (default HTTP profile):
+
 ```yaml
+server:
+  port: 8080
+
 spring:
-  ai:
-    ollama:
-      base-url: http://localhost:11434
-    vectorstore:
-      pgvector:
-        index-type: HNSW
-        dimension: 768
+  application:
+    name: sentinel-mcp
+  threads:
+    virtual:
+      enabled: true
+
   datasource:
     url: jdbc:postgresql://localhost:5432/sentinel_rag
     username: postgres
     password: secret
+    driver-class-name: org.postgresql.Driver
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      embedding:
+        options:
+          model: nomic-embed-text
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 768
+    mcp:
+      server:
+        name: sentinel-incident-triage
+        version: 1.0.0
+        type: SYNC
+        protocol: STREAMABLE
+
+sentinel:
+  log-provider: mock
+  loki:
+    url: http://localhost:3100
+  elasticsearch:
+    url: http://localhost:9200
+  rag:
+    similarity-threshold: 0.0
+    top-k: 4
 ```
+
+`application-stdio.yaml` (pure STDIO):
+
+```yaml
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        stdio: true
+
+logging:
+  pattern:
+    console: ""
+  file:
+    name: /logs/sentinel-stdio.log
+```
+
+---
+
+## Adding Runbooks
+
+There is **no** dynamic upload endpoint. Runbooks are ingested at startup by `RunbookIngestionRunner` from the `/runbooks` directory.
+
+1. Create a markdown file with YAML frontmatter:
+   ```markdown
+   ---
+   title: Payment Gateway Timeout
+   severity: high
+   service: payment-service
+   ---
+   ## Symptoms
+   ...
+   ## Remediation
+   ...
+   ```
+
+2. Place it in `/runbooks/` (bundled in the Docker image or mounted via volume).
+
+3. Restart the service (or rebuild the image). The splitter (`MarkdownRunbookSplitter`) extracts frontmatter, splits on H2 headers, and indexes chunks into pgvector with inherited metadata.
+
+---
+
+## Log Sources & Ingestion
+
+There is **no** user-facing `addLog()` method. Logs are queried from external sources via the `LogProvider` interface.
+
+| Provider | Activation | Source |
+|---|---|---|
+| `MockChaosLogProvider` | `sentinel.log-provider=mock` (default, `matchIfMissing=true`) | Hard-coded mock traces for testing |
+| `LokiLogProvider` | `sentinel.log-provider=loki` | Grafana Loki `/loki/api/v1/query_range` |
+| `ElasticsearchLogProvider` | `sentinel.log-provider=elasticsearch` | Elasticsearch `/_search` |
+
+Configure the endpoint in `application.yaml` (`sentinel.loki.url` / `sentinel.elasticsearch.url`). The providers use defensive `RestClient` timeouts (3s connect / 5s read).
+
+To add custom logs, either:
+- Configure your Loki/Elasticsearch instance and set the provider accordingly, or
+- Extend `MockChaosLogProvider` with new trace cases for local development.
+
+---
 
 ## Project Structure
 
@@ -138,13 +245,17 @@ spring:
 sentinel-mcp/
 ├── src/main/java/com/akash/sentinel/
 │   ├── mcp/dto/
-│   ├── provider/
-│   ├── rag/
-│   ├── service/
+│   ├── provider/          # LogProvider implementations
+│   ├── rag/               # MarkdownRunbookSplitter, RunbookRagService
+│   ├── service/           # PiiRedactionService, TraceAnalyzerService
 │   └── SentinelMcpApplication.java
-├── runbooks/
-└── docker-compose.yml
+├── runbooks/              # Markdown runbooks with YAML frontmatter
+├── docker-compose.yml
+├── Dockerfile
+└── pom.xml
 ```
+
+---
 
 ## MCP Tools
 
@@ -153,20 +264,19 @@ sentinel-mcp/
 - `search_runbooks`
 - `redact_pii`
 
-## Runbook Format
-
-```markdown
 ---
-title: Example
-severity: high
----
-```
 
 ## Development
 
 ```bash
-./mvnw test
+# Build and test
+./mvnw clean test
+
+# Run locally (requires PostgreSQL + Ollama)
+./mvnw spring-boot:run
 ```
+
+---
 
 ## License
 
