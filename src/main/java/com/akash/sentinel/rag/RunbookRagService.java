@@ -16,7 +16,7 @@ public class RunbookRagService {
 
     private static final Logger log = LoggerFactory.getLogger(RunbookRagService.class);
     private final VectorStore vectorStore;
-    private static final double SIMILARITY_THRESHOLD = 0.72;
+    private static final double SIMILARITY_THRESHOLD = 0.5;
     private static final int TOP_K = 4;
 
     public RunbookRagService(VectorStore vectorStore) {
@@ -68,13 +68,6 @@ public class RunbookRagService {
                         String docException = doc.getMetadata() != null ? (String) doc.getMetadata().get("primary_exception") : null;
                         double exactScore = (exceptionClass != null && exceptionClass.equals(docException)) ? 1.0 : 0.0;
                         double finalScore = (vectorScore * 0.70) + (exactScore * 0.30);
-//                        System.out.printf(
-//                                "runbook=%s, docException=%s, vectorScore=%f, queryException=%s%n",
-//                                doc.getMetadata().get("runbook_id"),
-//                                docException,
-//                                vectorScore,
-//                                exceptionClass
-//                        );
                         return new ScoredResult(doc, vectorScore, exactScore, finalScore);
 
                     })
@@ -98,17 +91,6 @@ public class RunbookRagService {
         }
     }
 
-//    private double extractVectorScore(Document doc) {
-//        if (doc.getMetadata() != null && doc.getMetadata().containsKey("similarity_score")) {
-//            Object val = doc.getMetadata().get("similarity_score");
-//            if (val instanceof Number) {
-//                return ((Number) val).doubleValue();
-//            }
-//        }
-//        log.error("hereeeeeeeeeeeeeee");
-//        System.out.println("Document metadata: " + doc.getMetadata());
-//        return 0.5;
-//    }
     private double extractVectorScore(Document doc) {
         if (doc.getMetadata() == null) {
             throw new IllegalStateException(

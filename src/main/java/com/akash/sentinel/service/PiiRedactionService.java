@@ -13,7 +13,8 @@ public class PiiRedactionService {
     private static final Pattern CC_PATTERN = Pattern.compile("\\b(?:\\d[ -]*?){13,16}\\b");
 
     public String redact(String input) {
-        if (input == null || input.isBlank()) return "";
+        if (input == null) return null;
+        if (input.isBlank()) return "";
         String s = JWT_PATTERN.matcher(input).replaceAll("[REDACTED_JWT]");
         s = EMAIL_PATTERN.matcher(s).replaceAll("[REDACTED_EMAIL]");
         s = API_KEY_PATTERN.matcher(s).replaceAll("$1=[REDACTED_KEY]");
