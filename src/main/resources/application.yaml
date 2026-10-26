@@ -8,14 +8,12 @@ spring:
     virtual:
       enabled: true
 
-  # PostgreSQL + pgvector connection
   datasource:
     url: jdbc:postgresql://localhost:5432/sentinel_rag
     username: postgres
     password: secret
     driver-class-name: org.postgresql.Driver
 
-  # Spring AI configuration
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -35,13 +33,12 @@ spring:
         type: SYNC
         protocol: STREAMABLE
 
-# Custom project settings
 sentinel:
-  log-provider: mock # Options: mock | loki | elasticsearch
+  log-provider: mock
   loki:
     url: http://localhost:3100
   elasticsearch:
     url: http://localhost:9200
   rag:
-    similarity-threshold: 0.72
+    similarity-threshold: 0.55
     top-k: 4

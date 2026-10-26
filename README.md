@@ -17,7 +17,7 @@ Sentinel MCP provides AI-powered incident analysis by:
 - Milestone 2 [COMPLETED] (v0.2.0): Semantic Markdown Chunker & Hybrid RAG
   - `MarkdownRunbookSplitter` — H2 semantic chunking with metadata inheritance
   - `RunbookIngestionRunner` — idempotent startup vector indexing
-  - `RunbookRagService` — metadata filter + 0.72 threshold + 70/30 hybrid reranker
+  - `RunbookRagService` — metadata filter + 0.55 threshold + 70/30 hybrid reranker
   - 3 Markdown runbooks with YAML frontmatter in `/runbooks`
 
 ## Tech Stack
@@ -42,11 +42,6 @@ Sentinel MCP provides AI-powered incident analysis by:
    docker-compose up -d
    ```
 
-   This starts:
-   - PostgreSQL with pgvector on port 5432
-   - Ollama on port 11434
-   - Auto-pulls the `nomic-embed-text` embedding model
-
 2. **Build the application:**
    ```bash
    ./mvnw clean package
@@ -57,15 +52,7 @@ Sentinel MCP provides AI-powered incident analysis by:
    ./mvnw spring-boot:run
    ```
 
-   The application will:
-   - Connect to PostgreSQL and Ollama
-   - Ingest runbooks from `/runbooks` directory
-   - Index them in the vector store
-   - Start the MCP server on the configured port
-
 ## Configuration
-
-Key configuration properties (in `application.properties` or `application.yml`):
 
 ```yaml
 spring:
@@ -87,66 +74,36 @@ spring:
 ```
 sentinel-mcp/
 ├── src/main/java/com/akash/sentinel/
-│   ├── mcp/dto/              # MCP data transfer objects
-│   ├── provider/             # Log providers (MockChaosLogProvider)
-│   ├── rag/                  # RAG services
-│   │   ├── MarkdownRunbookSplitter.java
-│   │   ├── RunbookIngestionRunner.java
-│   │   └── RunbookRagService.java
-│   ├── service/              # Business services
-│   │   ├── PiiRedactionService.java
-│   │   └── TraceAnalyzerService.java
+│   ├── mcp/dto/
+│   ├── provider/
+│   ├── rag/
+│   ├── service/
 │   └── SentinelMcpApplication.java
-├── runbooks/                 # Markdown runbooks with YAML frontmatter
-└── docker-compose.yml        # Infrastructure services
+├── runbooks/
+└── docker-compose.yml
 ```
 
 ## MCP Tools
 
-The server exposes the following MCP tools:
-
-- `analyze_error_spike` — Analyze error rate spikes from logs
-- `triage_incident` — Generate triage reports from log spans
-- `search_runbooks` — Retrieve relevant runbooks using RAG
-- `redact_pii` — Redact PII from log data
+- `analyze_error_spike`
+- `triage_incident`
+- `search_runbooks`
+- `redact_pii`
 
 ## Runbook Format
 
-Runbooks should be Markdown files with YAML frontmatter:
-
 ```markdown
 ---
-title: Database Connection Pool Exhaustion
+title: Example
 severity: high
-services:
-  - api
-  - database
-tags:
-  - performance
-  - database
 ---
-
-# Database Connection Pool Exhaustion
-
-## Symptoms
-...
 ```
 
 ## Development
 
-### Running Tests
-
 ```bash
 ./mvnw test
 ```
-
-Tests use Testcontainers for PostgreSQL and Ollama integration.
-
-### Adding New Runbooks
-
-1. Create a new Markdown file in `/runbooks`
-2. Add YAML frontmatter with metadata
-3. Restart the application to trigger ingestion
 
 ## License
 
