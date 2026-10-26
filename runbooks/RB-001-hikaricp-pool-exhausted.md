@@ -1,11 +1,11 @@
 ---
-service: "order-service"
+service: "db-service"
 primary_exception: "PSQLException"
 title: "HikariCP Connection Pool Exhaustion"
 ---
 
 ## Symptoms & Error Signatures
-Logs show `PSQLException` and connection timeouts in order-service.
+Logs show `PSQLException` and connection timeouts in db-service.
 
 ## Root Cause Analysis
 Connection pool exhaustion due to unclosed connections.

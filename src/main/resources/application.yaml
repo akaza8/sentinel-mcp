@@ -38,6 +38,10 @@ spring:
 # Custom project settings
 sentinel:
   log-provider: mock # Options: mock | loki | elasticsearch
+  loki:
+    url: http://localhost:3100
+  elasticsearch:
+    url: http://localhost:9200
   rag:
     similarity-threshold: 0.72
     top-k: 4
