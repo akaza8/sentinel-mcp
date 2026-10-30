@@ -4,7 +4,6 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring AI](https://img.shields.io/badge/Spring%20AI-MCP-blue.svg)](https://docs.spring.io/spring-ai/reference/)
 [![PostgreSQL pgvector](https://img.shields.io/badge/PostgreSQL-pgvector-336791.svg)](https://github.com/pgvector/pgvector)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Autonomous Incident Triage & Hybrid RAG Runbook Server via Model Context Protocol (MCP).**
 
@@ -374,6 +373,3 @@ Contributions are welcome, including:
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup instructions, STDIO logging rules, and pull request guidelines before submitting changes.
 
-## License
-
-Distributed under the MIT License. See [LICENSE](./LICENSE) for more information.
